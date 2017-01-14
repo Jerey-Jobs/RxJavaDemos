@@ -1,13 +1,5 @@
 package com.jerey.rxjavademo;
 
-import android.util.Log;
-
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-
 /**
  * 第三章：Scheduler 线程控制
  * Schedulers.immediate(): 直接在当前线程运行，相当于不指定线程。这是默认的 Scheduler。
@@ -19,6 +11,14 @@ import rx.schedulers.Schedulers;
  * <p>
  * Created by Xiamin on 2017/1/14.
  */
+
+import android.util.Log;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Log结果：
@@ -46,6 +46,27 @@ public class Demo3 {
                     public String call(Integer integer) {
                         Log.d(TAG, "map Threadid: " + Thread.currentThread().getId());
                         return " test:" + integer;
+                    }
+                })
+                .lift(new Observable.Operator<String, String>() {
+                    @Override
+                    public Subscriber<? super String> call(final Subscriber<? super String> subscriber) {
+                        return new Subscriber<String>() {
+                            @Override
+                            public void onCompleted() {
+                                subscriber.onCompleted();
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                subscriber.onError(e);
+                            }
+
+                            @Override
+                            public void onNext(String s) {
+                                subscriber.onNext("lift->" + s);
+                            }
+                        };
                     }
                 })
                 .subscribe(new Subscriber<String>() {
